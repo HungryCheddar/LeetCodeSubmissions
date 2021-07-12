@@ -36,10 +36,9 @@ public:
         }
         return result;
     }
-    std::string_view checkReverse(size_t palindromeOffset,std::string_view palindrome, std::string_view theRest)
+    std::string_view checkReverse(size_t palindromeOffset,size_t offset,std::string_view palindrome, std::string_view theRest)
     {
-        auto offset =palindrome.size();
-        auto result = palindrome;
+        auto result = theRest.substr(0,offset);
         bool match = false;
         do
         {
@@ -62,21 +61,24 @@ public:
         }while(match);
         return result;
     }
-    std::string_view exploreMirror(std::string_view palindrome, std::string_view theRest)
+    std::string_view exploreMirror(std::string_view palindrome, std::string_view theRest,bool isAllRepeating)
     {
-        if(palindrome.size()==2)
-            palindrome = palindrome.substr(0,1);
         std::string_view result=palindrome;
-        auto tmp = std::string(palindrome);
-        do
-        {       
-            palindrome = result;
-            tmp = palindrome;
-            result = checkReverse(0,palindrome,theRest);
-            if(result.size()==palindrome.size())
-                result = checkReverse(1,palindrome,theRest);
+        auto offset = palindrome.size();
+        auto augmentedP = palindrome;
+        if(isAllRepeating)
+            augmentedP = palindrome.substr(0,1);
+        
+        //auto tmp = std::string(palindrome);
+        //do
+        //{       
+        //    palindrome = result;
+         //   tmp = palindrome;
+            result = checkReverse(0,offset,augmentedP,theRest);
+            if(!isAllRepeating && result.size()==palindrome.size())
+                result = checkReverse(1,offset,augmentedP,theRest);
             //if we found a new palindrome, repeat with the new palindrome
-        }while(result.size()!=palindrome.size());
+        //}while(result.size()!=palindrome.size());
         return result;
     }
     std::string_view dumbSolution2(std::string_view s)
@@ -96,8 +98,8 @@ public:
                 if(checkPalindrome(substr,&isAllRepeating))
                 {
                     //if this is a palindrome, check if the subsequent sequence is a mirrored version of this
-                    result=exploreMirror(substr,fullSubstr);
-                    j= result.size()*2; 
+                    result=exploreMirror(substr,fullSubstr,isAllRepeating);
+                    j= result.size()*2-1; 
                     
                 }
             }
