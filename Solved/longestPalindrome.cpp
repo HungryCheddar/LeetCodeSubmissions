@@ -1,6 +1,7 @@
 class Solution {
 public:
     
+    //TODO: create and use a modified version that assumes that there are no sub palindromes
     bool checkPalindrome(std::string_view s,bool* pIsAllRepeating=nullptr)
     {
         auto middle = s.size()/2;
@@ -35,6 +36,49 @@ public:
         }
         return result;
     }
+    std::string_view checkReverse(size_t palindromeOffset,std::string_view palindrome, std::string_view theRest)
+    {
+        auto offset =palindrome.size();
+        auto result = palindrome;
+        bool match = false;
+        do
+        {
+            match =false;
+        if(theRest.size()>=offset-palindromeOffset+palindrome.size())
+        {
+            match = true;
+            for(size_t i=palindromeOffset,j=offset; i<palindrome.size() ;++i,++j)
+            {
+                 if(palindrome[i] != theRest[j])
+                 {
+                     match = false;
+                     break;
+                 }
+            }
+            if(match) result = theRest.substr(0,offset+palindrome.size()-palindromeOffset);
+            //auto rstr = std::string(result);
+            offset=result.size();
+        }
+        }while(match);
+        return result;
+    }
+    std::string_view exploreMirror(std::string_view palindrome, std::string_view theRest)
+    {
+        if(palindrome.size()==2)
+            palindrome = palindrome.substr(0,1);
+        std::string_view result=palindrome;
+        auto tmp = std::string(palindrome);
+        do
+        {       
+            palindrome = result;
+            tmp = palindrome;
+            result = checkReverse(0,palindrome,theRest);
+            if(result.size()==palindrome.size())
+                result = checkReverse(1,palindrome,theRest);
+            //if we found a new palindrome, repeat with the new palindrome
+        }while(result.size()!=palindrome.size());
+        return result;
+    }
     std::string_view dumbSolution2(std::string_view s)
     {
         //printf("start %s\n", s.data());
@@ -44,29 +88,17 @@ public:
             auto subSize =s.size()-i;
             for(size_t j=result.size()+1;j+i<=s.size();++j)
             {
-                auto substr = s.substr(i,j);
-                auto tmp = std::string(substr);
+                auto fullSubstr=s.substr(i);
+                auto substr = fullSubstr.substr(0,j);
+                //auto tmp = std::string(substr);
                 //printf("substr %s\n",tmp.c_str());
                 bool isAllRepeating=false;
                 if(checkPalindrome(substr,&isAllRepeating))
                 {
-                    result =substr;
-                    if(!isAllRepeating)
-                    {
-                        //If it's a palindrome that is non repeating,
-                        // the next possible palindrome is 2n -1 aba -> ababa baab -> baabaab
-                        j+= j-1;  
-                        //subtract one to account for loop increment
-                        j--;
-                    }else
-                    {
-                        //if it's repeating, keep going until we break the repeating combo
-                        while(i+j<s.size() && s[i] == s[i+j])
-                        {
-                            ++j;
-                        }
-                        result = s.substr(i,j);
-                    }
+                    //if this is a palindrome, check if the subsequent sequence is a mirrored version of this
+                    result=exploreMirror(substr,fullSubstr);
+                    j= result.size()*2; 
+                    
                 }
             }
         }
@@ -74,6 +106,6 @@ public:
     }
     
     string longestPalindrome(string s) {
-     return std::string{dumbSolution2(s)};   
+     return std::move(s=dumbSolution2(s));   
     }
 };
